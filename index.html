@@ -337,7 +337,12 @@
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyB-GdpbVDDxPNPxthH5VcrqitErUgcQK0o",
-    authDomain: "fmpnsc-organizer.firebaseapp.com",
+    // Use our own Hosting domain (not the default *.firebaseapp.com) so the
+    // Google sign-in redirect stays same-origin. Chrome's storage
+    // partitioning otherwise blocks the sessionStorage handoff between the
+    // app's origin and a separate firebaseapp.com auth-handler origin,
+    // silently dropping the sign-in result on return.
+    authDomain: "fmpnsc-organizer.web.app",
     projectId: "fmpnsc-organizer",
     storageBucket: "fmpnsc-organizer.firebasestorage.app",
     messagingSenderId: "408215394125",
