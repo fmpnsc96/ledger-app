@@ -1204,7 +1204,10 @@
       showAuthError('');
       try{
         const provider = new firebase.auth.GoogleAuthProvider();
-        await firebase.auth().signInWithPopup(provider);
+        // Redirect rather than popup: popups get silently blocked by many
+        // browsers (and don't exist at all inside an installed PWA), while
+        // a full-page redirect works everywhere.
+        await firebase.auth().signInWithRedirect(provider);
       }catch(e){ showAuthError(e.message||'Google sign-in failed.'); }
     });
 
@@ -1241,6 +1244,12 @@
   async function init(){
     wireAuthScreen();
     wireSignOut();
+    // Surfaces any error from a Google sign-in redirect once the browser
+    // comes back to the app (e.g. the user closed the Google page, or an
+    // account already exists with a different sign-in method).
+    firebase.auth().getRedirectResult().catch((e)=>{
+      showAuthError(e.message||'Google sign-in failed.');
+    });
     firebase.auth().onAuthStateChanged(async (user)=>{
       const authScreen = document.getElementById('authScreen');
       const appShell = document.getElementById('appShell');
