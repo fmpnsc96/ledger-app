@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Apply any saved palette choice before the stylesheet paints, so the
+  // app never flashes the default gold before switching to a saved pick.
+  (function(){
+    try{
+      var p = localStorage.getItem('ledger-palette');
+      if(p==='steel') document.documentElement.classList.add('palette-steel');
+      else if(p==='violet') document.documentElement.classList.add('palette-violet');
+    }catch(e){}
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#eef1f4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0a0d12" media="(prefers-color-scheme: dark)">
@@ -90,6 +101,53 @@
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
   }
 
+  /* ---- alternative palettes (chosen in Settings, applied via a class on <html>) ---- */
+  :root.palette-steel{
+    --bg: #eef2f7; --surface: #ffffff; --surface-2: #e5ebf2;
+    --ink: #111827; --ink-2: #4b5568; --muted: #8992a3;
+    --border: rgba(17,24,39,.09); --border-strong: rgba(17,24,39,.16);
+    --accent: #2a5fd6; --accent-ink: #ffffff; --accent-wash: rgba(42,95,214,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root.palette-steel:not([data-theme="light"]){
+      --bg: #0a0d14; --surface: #12161f; --surface-2: #1a1f2b;
+      --ink: #eef1f7; --ink-2: #b7bfcf; --muted: #707a8c;
+      --border: rgba(238,241,247,.09); --border-strong: rgba(238,241,247,.17);
+      --accent: #5f8bff; --accent-ink: #0a0d14; --accent-wash: rgba(95,139,255,.16);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root.palette-steel[data-theme="dark"]{
+    --bg: #0a0d14; --surface: #12161f; --surface-2: #1a1f2b;
+    --ink: #eef1f7; --ink-2: #b7bfcf; --muted: #707a8c;
+    --border: rgba(238,241,247,.09); --border-strong: rgba(238,241,247,.17);
+    --accent: #5f8bff; --accent-ink: #0a0d14; --accent-wash: rgba(95,139,255,.16);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  :root.palette-violet{
+    --bg: #f2f0f6; --surface: #ffffff; --surface-2: #eae6f0;
+    --ink: #18131f; --ink-2: #564f63; --muted: #948da2;
+    --border: rgba(24,19,31,.09); --border-strong: rgba(24,19,31,.16);
+    --accent: #6f3fc4; --accent-ink: #ffffff; --accent-wash: rgba(111,63,196,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root.palette-violet:not([data-theme="light"]){
+      --bg: #0e0b14; --surface: #17131f; --surface-2: #201a2b;
+      --ink: #f2eff6; --ink-2: #c3bacf; --muted: #8b8298;
+      --border: rgba(242,239,246,.09); --border-strong: rgba(242,239,246,.18);
+      --accent: #a17ce8; --accent-ink: #140a1f; --accent-wash: rgba(161,124,232,.18);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root.palette-violet[data-theme="dark"]{
+    --bg: #0e0b14; --surface: #17131f; --surface-2: #201a2b;
+    --ink: #f2eff6; --ink-2: #c3bacf; --muted: #8b8298;
+    --border: rgba(242,239,246,.09); --border-strong: rgba(242,239,246,.18);
+    --accent: #a17ce8; --accent-ink: #140a1f; --accent-wash: rgba(161,124,232,.18);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
   *{box-sizing:border-box;}
   html,body{background:var(--bg);}
   body{
@@ -109,7 +167,7 @@
   }
   .topbar{
     position:sticky; top:0; z-index:5; background:var(--bg);
-    padding:18px 20px 10px; display:flex; align-items:baseline; justify-content:space-between;
+    padding:calc(18px + env(safe-area-inset-top)) 20px 10px; display:flex; align-items:baseline; justify-content:space-between;
     border-bottom:1px solid transparent;
   }
   .topbar h1{margin:0; font-size:22px; font-weight:600; letter-spacing:-.01em;}
@@ -306,7 +364,7 @@
 <div class="shell" id="appShell" style="display:none">
   <div class="topbar">
     <h1 id="pageTitle">Ledger</h1>
-    <div style="display:flex; align-items:center; gap:10px;"><div class="asof" id="pageSub">—</div><button id="signOutBtn" title="Sign out" style="border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:2px;">Sign out</button></div>
+    <div style="display:flex; align-items:center; gap:12px;"><div class="asof" id="pageSub">—</div><button id="settingsBtn" title="Settings" style="border:none; background:none; color:var(--muted); display:flex; align-items:center; cursor:pointer; padding:2px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.4-2-3.4-2.3.8a7.6 7.6 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.8-2 3.4 2 1.4a7.6 7.6 0 0 0 0 3l-2 1.4 2 3.4 2.3-.8a7.6 7.6 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.8 2-3.4-2-1.4Z"/></svg></button><button id="signOutBtn" title="Sign out" style="border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:2px;">Sign out</button></div>
   </div>
   <main id="view"><div class="loading">Loading your ledger…</div></main>
   <nav class="tabbar">
@@ -1149,6 +1207,77 @@
     });
   }
 
+  // ---------- settings / palette ----------
+  const PALETTES = [
+    { key:'gold',   cls:null,             label:'Gold',            swatch:'#a9761f' },
+    { key:'steel',  cls:'palette-steel',  label:'Steel Blue',      swatch:'#2a5fd6' },
+    { key:'violet', cls:'palette-violet', label:'Charcoal Violet', swatch:'#6f3fc4' },
+  ];
+
+  function currentPaletteKey(){
+    if(document.documentElement.classList.contains('palette-steel')) return 'steel';
+    if(document.documentElement.classList.contains('palette-violet')) return 'violet';
+    return 'gold';
+  }
+
+  function syncThemeColorMeta(){
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if(!bg) return;
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content', bg));
+  }
+
+  function applyPalette(key, opts){
+    opts = opts || {};
+    document.documentElement.classList.remove('palette-steel','palette-violet');
+    const p = PALETTES.find(x=>x.key===key) || PALETTES[0];
+    if(p.cls) document.documentElement.classList.add(p.cls);
+    try{ localStorage.setItem('ledger-palette', p.key); }catch(e){}
+    syncThemeColorMeta();
+    if(opts.persist!==false && STATE.db){
+      STATE.db.collection('settings').doc('preferences').set({palette:p.key, updatedAt:new Date().toISOString()}, {merge:true}).catch(()=>{});
+    }
+  }
+
+  async function syncPaletteFromCloud(){
+    if(!STATE.db) return;
+    try{
+      const doc = await STATE.db.collection('settings').doc('preferences').get();
+      const remote = doc.exists ? doc.data().palette : null;
+      if(remote && remote!==currentPaletteKey()) applyPalette(remote, {persist:false});
+    }catch(e){}
+  }
+
+  function formSettings(){
+    const current = currentPaletteKey();
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Settings</h2>
+      <div class="section-title first" style="margin-top:0;">Appearance</div>
+      <div class="stack" id="paletteOptions">
+        ${PALETTES.map(p=>`
+          <div class="row" data-palette-option="${p.key}" style="padding:11px 12px; border:1px solid ${p.key===current?'var(--accent)':'var(--border)'}; border-radius:12px; cursor:pointer; background:${p.key===current?'var(--accent-wash)':'var(--surface)'};">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="width:20px; height:20px; border-radius:50%; background:${p.swatch}; flex:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);"></span>
+              <span style="font-size:14.5px; font-weight:500;">${p.label}</span>
+            </div>
+            ${p.key===current ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    `);
+    document.querySelectorAll('[data-palette-option]').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        applyPalette(row.dataset.paletteOption);
+        formSettings();
+      });
+    });
+  }
+
+  function wireSettingsBtn(){
+    const btn = document.getElementById('settingsBtn');
+    if(btn) btn.addEventListener('click', formSettings);
+  }
+
   // ---------- modal ----------
   function showModal(html){
     document.getElementById('modalBody').innerHTML = html;
@@ -1250,6 +1379,8 @@
   async function init(){
     wireAuthScreen();
     wireSignOut();
+    wireSettingsBtn();
+    syncThemeColorMeta();
     // Surfaces any error from a Google sign-in redirect once the browser
     // comes back to the app (e.g. the user closed the Google page, or an
     // account already exists with a different sign-in method).
@@ -1263,6 +1394,7 @@
         authScreen.style.display = 'none';
         appShell.style.display = '';
         STATE.db = firebase.firestore();
+        await syncPaletteFromCloud();
         document.getElementById('view').innerHTML = '<div class="loading">Loading your ledger…</div>';
         await loadAll();
         render();
