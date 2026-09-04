@@ -1,6 +1,6 @@
 // Bump this on every deploy that changes cached files, so old caches get cleared
 // and clients pick up the new version instead of a stale cached copy.
-const CACHE_VERSION = 'ledger-v2';
+const CACHE_VERSION = 'ledger-v3';
 const APP_SHELL = [
   './',
   './index.html',
