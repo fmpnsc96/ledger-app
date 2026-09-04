@@ -701,6 +701,7 @@
     list.sort((a,b)=>{
       if(a.status==='OPEN'&&b.status!=='OPEN') return -1;
       if(b.status==='OPEN'&&a.status!=='OPEN') return 1;
+      if(a.status==='CLOSED'&&b.status==='CLOSED') return (b.sellDate||'').localeCompare(a.sellDate||'');
       return (b.buyDate||'').localeCompare(a.buyDate||'');
     });
 
