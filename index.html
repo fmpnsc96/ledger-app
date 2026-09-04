@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef1f4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0d12" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Personal portfolio and finance tracker">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ledger">
+<title>Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --surface-2: #f4f6f8;
+    --ink: #10141c;
+    --ink-2: #4b5563;
+    --muted: #8993a1;
+    --border: rgba(16,20,28,.10);
+    --border-strong: rgba(16,20,28,.16);
+    --accent: #a9761f;
+    --accent-ink: #ffffff;
+    --accent-wash: rgba(184,132,44,.12);
+    --good: #0ca30c;
+    --critical: #d03b3b;
+    --warning: #ad7a00;
+    --series-1: #2a78d6; /* TCG */
+    --series-2: #c1591f; /* Sneakers */
+    --series-3: #128f63; /* Stocks */
+    --series-4: #ad8700; /* Crypto */
+    --series-5: #c05d86; /* Stationary/Clothing */
+    --series-6: #5b4bb8; /* Cash */
+    --shadow: 0 1px 2px rgba(16,20,28,.04), 0 8px 24px -12px rgba(16,20,28,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg: #0a0d12;
+      --surface: #141922;
+      --surface-2: #1b212c;
+      --ink: #f1f3f6;
+      --ink-2: #b7bfcb;
+      --muted: #6f7885;
+      --border: rgba(241,243,246,.10);
+      --border-strong: rgba(241,243,246,.18);
+      --accent: #d9a53f;
+      --accent-ink: #14100a;
+      --accent-wash: rgba(217,165,63,.14);
+      --good: #35c23c;
+      --critical: #ef6a6a;
+      --warning: #e6b644;
+      --series-1: #3987e5;
+      --series-2: #e07a41;
+      --series-3: #2fb787;
+      --series-4: #d3ab2e;
+      --series-5: #e087ab;
+      --series-6: #9085e9;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg: #0a0d12;
+    --surface: #141922;
+    --surface-2: #1b212c;
+    --ink: #f1f3f6;
+    --ink-2: #b7bfcb;
+    --muted: #6f7885;
+    --border: rgba(241,243,246,.10);
+    --border-strong: rgba(241,243,246,.18);
+    --accent: #d9a53f;
+    --accent-ink: #14100a;
+    --accent-wash: rgba(217,165,63,.14);
+    --good: #35c23c;
+    --critical: #ef6a6a;
+    --warning: #e6b644;
+    --series-1: #3987e5;
+    --series-2: #e07a41;
+    --series-3: #2fb787;
+    --series-4: #d3ab2e;
+    --series-5: #e087ab;
+    --series-6: #9085e9;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{background:var(--bg);}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'IBM Plex Serif', Georgia, serif;}
+  .mono, .num{font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums;}
+  button{font-family:inherit;}
+  ::selection{background:var(--accent-wash);}
+
+  .shell{
+    max-width:480px; margin:0 auto; min-height:100vh; background:var(--bg);
+    display:flex; flex-direction:column; position:relative;
+    box-shadow: 0 0 60px rgba(0,0,0,.08);
+  }
+  .topbar{
+    position:sticky; top:0; z-index:5; background:var(--bg);
+    padding:18px 20px 10px; display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid transparent;
+  }
+  .topbar h1{margin:0; font-size:22px; font-weight:600; letter-spacing:-.01em;}
+  .topbar .asof{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+
+  main{flex:1; padding:4px 20px 100px; overflow-x:hidden;}
+
+  .tabbar{
+    position:sticky; bottom:0; z-index:10; background:var(--surface);
+    border-top:1px solid var(--border);
+    display:flex; padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    gap:2px;
+  }
+  .tabbtn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:6px 2px 4px; border:none; background:none; color:var(--muted);
+    font-size:10.5px; font-weight:500; border-radius:10px; cursor:pointer;
+  }
+  .tabbtn svg{width:22px; height:22px;}
+  .tabbtn.active{color:var(--accent);}
+  .tabbtn:active{background:var(--surface-2);}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:16px; box-shadow:var(--shadow);
+  }
+  .stack{display:flex; flex-direction:column; gap:12px;}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+
+  .hero{padding:18px 4px 8px;}
+  .hero .label{font-size:12px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.07em; margin-bottom:4px;}
+  .hero .value{font-size:40px; font-weight:600; letter-spacing:-.02em; line-height:1.05;}
+  .hero .delta{margin-top:6px; font-size:13px; display:inline-flex; align-items:center; gap:4px;}
+  .delta.good{color:var(--good);} .delta.bad{color:var(--critical);}
+
+  .kpi-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
+  .kpi{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px;}
+  .kpi .l{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px;}
+  .kpi .v{font-size:17px; font-weight:600;}
+  .kpi .s{font-size:11px; color:var(--ink-2); margin-top:2px;}
+
+  .section-title{
+    font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-2); margin:26px 2px 10px;
+  }
+  .section-title.first{margin-top:6px;}
+
+  .chart-wrap{padding:14px 6px 4px;}
+  .barlist{display:flex; flex-direction:column; gap:11px;}
+  .barlist .brow .bhead{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;}
+  .barlist .bhead .bname{font-weight:500;}
+  .barlist .bhead .bval{color:var(--ink-2);}
+  .btrack{height:8px; border-radius:5px; background:var(--surface-2); overflow:hidden;}
+  .bfill{height:100%; border-radius:5px;}
+
+  .list-row{
+    display:flex; align-items:center; gap:12px; padding:12px 2px; border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .list-row:last-child{border-bottom:none;}
+  .swatch{width:8px; height:8px; border-radius:50%; flex:none;}
+  .list-row .main{flex:1; min-width:0;}
+  .list-row .name{font-size:14.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .list-row .sub{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .list-row .right{text-align:right; flex:none;}
+  .list-row .amt{font-size:14px; font-weight:500;}
+  .list-row .chg{font-size:11px; margin-top:1px;}
+
+  .chip-row{display:flex; gap:7px; overflow-x:auto; padding:2px 2px 12px; margin:0 -2px;}
+  .chip-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:none; padding:7px 13px; border-radius:100px; border:1px solid var(--border-strong);
+    background:var(--surface); font-size:12.5px; font-weight:500; color:var(--ink-2); cursor:pointer;
+  }
+  .chip.active{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+
+  .search{
+    width:100%; padding:11px 14px; border-radius:12px; border:1px solid var(--border-strong);
+    background:var(--surface); color:var(--ink); font-size:14px; margin-bottom:12px;
+  }
+  .search:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .segmented{display:flex; background:var(--surface-2); border-radius:12px; padding:3px; margin-bottom:16px;}
+  .segmented button{
+    flex:1; border:none; background:none; padding:8px 6px; border-radius:9px; font-size:13px;
+    font-weight:500; color:var(--ink-2); cursor:pointer;
+  }
+  .segmented button.active{background:var(--surface); color:var(--ink); box-shadow:var(--shadow);}
+
+  .fab{
+    position:fixed; z-index:8; right:calc(50% - 240px + 20px); bottom:calc(78px + env(safe-area-inset-bottom));
+    width:52px; height:52px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    border:none; box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  @media (max-width:519px){ .fab{ right:20px; } }
+  .fab svg{width:24px; height:24px;}
+
+  .empty{padding:40px 10px; text-align:center; color:var(--muted); font-size:13.5px;}
+
+  .badge{
+    display:inline-flex; align-items:center; padding:2px 8px; border-radius:100px; font-size:10.5px;
+    font-weight:600; letter-spacing:.02em; text-transform:uppercase;
+  }
+  .badge.open{background:var(--accent-wash); color:var(--accent);}
+  .badge.closed{background:var(--surface-2); color:var(--ink-2);}
+  .badge.preorder{background:rgba(45,143,99,.12); color:var(--series-3);}
+  .badge.arrived-yes{background:rgba(12,163,12,.12); color:var(--good); cursor:pointer;}
+  .badge.arrived-no{background:rgba(208,59,59,.12); color:var(--critical); cursor:pointer;}
+
+  .subtype-label{
+    font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); padding:12px 2px 2px;
+  }
+  .list-row .chevron{width:16px; height:16px; color:var(--muted); flex:none; transition:transform .15s ease;}
+  .list-row .chevron.open{transform:rotate(90deg);}
+  .list-row.sub-row{padding-left:4px; margin-left:16px; border-left:2px solid var(--border); border-bottom:1px solid var(--border);}
+  .list-row.sub-row:last-child{border-bottom:none;}
+  .list-row.sub-row .swatch{opacity:.45;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(10,13,18,.5); z-index:50; display:none;
+    align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto; background:var(--surface);
+    border-radius:20px 20px 0 0; padding:18px 20px calc(24px + env(safe-area-inset-bottom));
+    animation: rise .22s ease-out;
+  }
+  @keyframes rise{ from{ transform:translateY(24px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+  .modal h2{margin:2px 0 16px; font-size:18px;}
+  .modal-close{
+    float:right; width:30px; height:30px; border-radius:50%; border:none; background:var(--surface-2);
+    color:var(--ink-2); font-size:16px; cursor:pointer;
+  }
+  .field{margin-bottom:13px;}
+  .field label{display:block; font-size:11.5px; color:var(--ink-2); margin-bottom:5px; font-weight:500;}
+  .field input, .field select, .field textarea{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border-strong);
+    background:var(--bg); color:var(--ink); font-size:14.5px; font-family:inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .field-row{display:flex; gap:10px;}
+  .field-row .field{flex:1;}
+  .btn{
+    width:100%; padding:13px; border-radius:12px; border:none; background:var(--ink); color:var(--bg);
+    font-size:14.5px; font-weight:600; cursor:pointer; margin-top:6px;
+  }
+  .btn.secondary{background:var(--surface-2); color:var(--ink);}
+  .btn.danger{background:none; color:var(--critical); font-weight:500;}
+  .btn-row{display:flex; gap:10px;}
+  .btn-row .btn{margin-top:0;}
+
+  .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0;}
+  .detail-cell .l{font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+  .detail-cell .v{font-size:14.5px; font-weight:500; margin-top:2px;}
+
+  svg.linechart{width:100%; display:block; overflow:visible;}
+  .lc-tooltip{
+    position:absolute; background:var(--ink); color:var(--bg); font-size:11px; padding:5px 8px;
+    border-radius:8px; pointer-events:none; white-space:nowrap; transform:translate(-50%,-115%);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .chart-container{position:relative;}
+
+  .progress-track{height:12px; border-radius:6px; background:var(--surface-2); overflow:hidden; margin:10px 0 4px;}
+  .progress-fill{height:100%; border-radius:6px; background:var(--accent);}
+
+  .loading{display:flex; align-items:center; justify-content:center; height:60vh; color:var(--muted); font-size:13px;}
+</style>
+</head>
+<body>
+<div id="authScreen" style="display:flex; min-height:100vh; align-items:center; justify-content:center; padding:24px; background:var(--bg);">
+  <div class="card" style="width:100%; max-width:360px; padding:28px 24px;">
+    <h1 class="serif" style="margin:0 0 4px; font-size:26px;">Ledger</h1>
+    <p style="margin:0 0 22px; color:var(--ink-2); font-size:13.5px;">Sign in to access your portfolio and finances.</p>
+    <button class="btn" id="googleSignInBtn" style="background:var(--ink); display:flex; align-items:center; justify-content:center; gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.4-.1-2.5-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 6.1 29.6 4 24 4 16 4 9.1 8.5 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.1-5.1l-6.5-5.5C29.6 35.4 27 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.6 5.1C9 39.5 15.9 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.5C41.5 36 44 30.5 44 24c0-1.4-.1-2.5-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+    <div style="text-align:center; margin:16px 0; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em;">or</div>
+    <button class="btn secondary" id="useEmailToggle" type="button">Use email &amp; password</button>
+    <div id="emailAuthBlock" style="display:none; margin-top:14px;">
+      <div class="field"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="authPassword" placeholder="••••••••"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="emailSignInBtn">Sign in</button>
+        <button class="btn secondary" id="emailSignUpBtn">Create account</button>
+      </div>
+    </div>
+    <div id="authError" style="display:none; margin-top:14px; padding:10px 12px; border-radius:10px; background:rgba(208,59,59,.12); color:var(--critical); font-size:12.5px;"></div>
+  </div>
+</div>
+<div class="shell" id="appShell" style="display:none">
+  <div class="topbar">
+    <h1 id="pageTitle">Ledger</h1>
+    <div style="display:flex; align-items:center; gap:10px;"><div class="asof" id="pageSub">—</div><button id="signOutBtn" title="Sign out" style="border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:2px;">Sign out</button></div>
+  </div>
+  <main id="view"><div class="loading">Loading your ledger…</div></main>
+  <nav class="tabbar">
+    <button class="tabbtn active" data-tab="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="tabbtn" data-tab="portfolio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 4.5v-1M16 4.5v-1"/></svg>
+      <span>Portfolio</span>
+    </button>
+    <button class="tabbtn" data-tab="finances">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M11 19V4M18 19v-6"/></svg>
+      <span>Finances</span>
+    </button>
+    <button class="tabbtn" data-tab="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h9L20 8v12.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1Z"/><path d="M14.5 3.5V8H19M8.5 12.5h7M8.5 16h5"/></svg>
+      <span>Log</span>
+    </button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="modalRoot"><div class="modal" id="modalBody"></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-GdpbVDDxPNPxthH5VcrqitErUgcQK0o",
+    authDomain: "fmpnsc-organizer.firebaseapp.com",
+    projectId: "fmpnsc-organizer",
+    storageBucket: "fmpnsc-organizer.firebasestorage.app",
+    messagingSenderId: "408215394125",
+    appId: "1:408215394125:web:a2536160ceab148eea8904"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  const STATE = { items: [], networth: [], expenses: [], expenseLog: [], db: null, ready:false };
+  let currentTab = 'dashboard';
+  let portfolioFilter = { status: 'OPEN', type: 'All', q: '' };
+  let financesSeg = 'networth';
+  let expandedGroups = new Set();
+
+  const TYPE_ORDER = ['Stocks','Crypto','TCG','Sneakers','Stationary','Clothing'];
+  const TYPE_COLOR = { TCG:'var(--series-1)', Sneakers:'var(--series-2)', Stocks:'var(--series-3)', Crypto:'var(--series-4)', Stationary:'var(--series-5)', Clothing:'var(--series-5)' };
+  const EXPENSE_CATS = [['tobacco','Tobacco'],['supermarket','Supermarket'],['eatingOut','Eating Out'],['socialLife','Social Life'],['transport','Transport'],['entertainment','Entertainment'],['clothing','Clothing'],['health','Health'],['wellbeing','Wellbeing'],['gifts','Gifts'],['household','Household'],['bank','Bank'],['insurances','Insurances'],['travel','Travel'],['investments','Investments']];
+  const EXPENSE_CAT_LABEL = Object.fromEntries(EXPENSE_CATS);
+  const SUBTYPES = { TCG:['Pokémon','One Piece','Riftbound','Palworld'], Stocks:['ETF','Single Stock'], Crypto:['Crypto','NFT'], Stationary:['Stationary'], Clothing:['Clothing'], Sneakers:['Sneakers'] };
+  const PHYSICAL_TYPES = ['TCG','Sneakers','Stationary'];
+
+  // ---------- helpers ----------
+  function euro(n){
+    if(n===null||n===undefined||isNaN(n)) return '—';
+    const neg = n<0; n=Math.abs(n);
+    const s = n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return (neg?'-':'')+'€'+s;
+  }
+  function euroShort(n){
+    if(n===null||n===undefined||isNaN(n)) return '—';
+    const neg = n<0; n=Math.abs(n);
+    let s;
+    if(n>=1000) s=(n/1000).toFixed(1).replace(/\.0$/,'')+'k';
+    else s=n.toFixed(0);
+    return (neg?'-':'')+'€'+s;
+  }
+  function pct(n){ if(n===null||n===undefined||isNaN(n)) return '—'; return (n*100>=0?'+':'')+(n*100).toFixed(1)+'%'; }
+  function fmtDate(iso){
+    if(!iso) return '—';
+    const d = new Date(iso+'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function fmtDateShort(iso){
+    const d = new Date(iso+'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+  function fmtMonth(iso){
+    if(!iso) return '—';
+    const d = new Date((iso.length===7? iso+'-01': iso)+'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  }
+  function monthKey(dateStr){ return (dateStr||'').slice(0,7); }
+  function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+  function esc(s){ return (s===null||s===undefined)?'':String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  function derived(item){
+    const sellTotal = (item.sellPrice||0) + (item.other||0);
+    let profit, roi, currentValue;
+    if(item.status==='CLOSED'){
+      profit = sellTotal - item.buyPrice;
+      roi = item.buyPrice ? profit/item.buyPrice : null;
+      currentValue = sellTotal;
+    } else {
+      currentValue = (item.currentMarketValue!==null && item.currentMarketValue!==undefined) ? item.currentMarketValue : item.buyPrice;
+      profit = currentValue - item.buyPrice;
+      roi = item.buyPrice ? profit/item.buyPrice : null;
+    }
+    return {sellTotal, profit, roi, currentValue};
+  }
+
+  function isArrived(item){
+    return (item.arrived!==undefined && item.arrived!==null) ? !!item.arrived : item.status!=='PREORDER';
+  }
+  function itemSwatchColor(item){
+    if(PHYSICAL_TYPES.includes(item.type)){
+      if(item.status==='PREORDER') return 'var(--muted)';
+      return isArrived(item) ? 'var(--good)' : 'var(--critical)';
+    }
+    return TYPE_COLOR[item.type]||'var(--muted)';
+  }
+  function groupSwatchColor(items, typeKey){
+    if(PHYSICAL_TYPES.includes(typeKey)){
+      const nonPreorder = items.filter(i=>i.status!=='PREORDER');
+      if(!nonPreorder.length) return 'var(--muted)';
+      const flags = nonPreorder.map(isArrived);
+      if(flags.every(a=>a)) return 'var(--good)';
+      if(flags.every(a=>!a)) return 'var(--critical)';
+      return 'var(--warning)';
+    }
+    return TYPE_COLOR[typeKey]||'var(--muted)';
+  }
+
+  // ---------- db ----------
+  async function loadAll(){
+    if(!STATE.db){ STATE.ready = true; return; }
+    const [itemsSnap, nwSnap, expSnap, logSnap] = await Promise.all([
+      STATE.db.collection('portfolioItems').limit(1000).get(),
+      STATE.db.collection('networthSnapshots').limit(1000).get(),
+      STATE.db.collection('expenseEntries').limit(1000).get(),
+      STATE.db.collection('expenseLog').limit(1000).get(),
+    ]);
+    STATE.items = itemsSnap.docs.map(d=>({_id:d.id, ...d.data()}));
+    STATE.networth = nwSnap.docs.map(d=>({_id:d.id, ...d.data()})).sort((a,b)=>a.date.localeCompare(b.date));
+    STATE.expenses = expSnap.docs.map(d=>({_id:d.id, ...d.data()})).sort((a,b)=>a.date.localeCompare(b.date));
+    STATE.expenseLog = logSnap.docs.map(d=>({_id:d.id, ...d.data()}));
+    STATE.ready = true;
+  }
+
+  async function refreshAndRender(){ await loadAll(); render(); }
+
+  // ---------- charts ----------
+  function lineChart(points, opts){
+    opts = opts||{};
+    const w = opts.w||300, h = opts.h||120, pad = {t:10,r:8,b:20,l:8};
+    if(points.length===0) return '<div class="empty">No data yet</div>';
+    const xs = points.map(p=>p.x.getTime());
+    const ys = points.map(p=>p.y);
+    const minX=Math.min(...xs), maxX=Math.max(...xs);
+    const minY=Math.min(0,Math.min(...ys)), maxY=Math.max(...ys)*1.08 || 1;
+    const X = t => pad.l + (maxX>minX ? (t-minX)/(maxX-minX) : 0.5) * (w-pad.l-pad.r);
+    const Y = v => (h-pad.b) - (maxY>minY ? (v-minY)/(maxY-minY) : 0.5) * (h-pad.t-pad.b);
+    const d = points.map((p,i)=> (i===0?'M':'L') + X(p.x.getTime()).toFixed(1) + ' ' + Y(p.y).toFixed(1)).join(' ');
+    const areaD = d + ` L ${X(points[points.length-1].x.getTime()).toFixed(1)} ${(h-pad.b).toFixed(1)} L ${X(points[0].x.getTime()).toFixed(1)} ${(h-pad.b).toFixed(1)} Z`;
+    const last = points[points.length-1];
+    const gridY = h-pad.b - (maxY>minY? (0-minY)/(maxY-minY):0) * (h-pad.t-pad.b);
+    const id = 'lc'+Math.random().toString(36).slice(2,8);
+    const ptsData = points.map(p=>`${X(p.x.getTime()).toFixed(1)},${Y(p.y).toFixed(1)},${p.x.toISOString().slice(0,10)},${p.y}`).join('|');
+    return `<div class="chart-container">
+      <svg class="linechart" id="${id}" viewBox="0 0 ${w} ${h}" data-pts="${esc(ptsData)}">
+        <line x1="${pad.l}" y1="${gridY.toFixed(1)}" x2="${w-pad.r}" y2="${gridY.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>
+        <path d="${areaD}" fill="var(--accent-wash)" stroke="none"/>
+        <path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${X(last.x.getTime()).toFixed(1)}" cy="${Y(last.y).toFixed(1)}" r="3.5" fill="var(--accent)"/>
+        <g class="lc-cursor" style="display:none"><line x1="0" y1="${pad.t}" x2="0" y2="${h-pad.b}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2,3"/><circle r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="1.5"/></g>
+      </svg>
+    </div>`;
+  }
+
+  function wireLineChartHover(container){
+    container.querySelectorAll('svg.linechart').forEach(svg=>{
+      const raw = svg.dataset.pts; if(!raw) return;
+      const pts = raw.split('|').map(s=>{ const [x,y,date,val]=s.split(','); return {x:+x,y:+y,date,val:+val}; });
+      const cursor = svg.querySelector('.lc-cursor');
+      const wrap = svg.parentElement;
+      let tip = wrap.querySelector('.lc-tooltip');
+      if(!tip){ tip = document.createElement('div'); tip.className='lc-tooltip'; tip.style.display='none'; wrap.appendChild(tip); }
+      function show(clientX){
+        const rect = svg.getBoundingClientRect();
+        const vb = svg.viewBox.baseVal;
+        const localX = (clientX-rect.left)/rect.width*vb.width;
+        let nearest = pts[0], bd=Infinity;
+        pts.forEach(p=>{ const dd=Math.abs(p.x-localX); if(dd<bd){bd=dd; nearest=p;} });
+        cursor.style.display='block';
+        cursor.querySelector('line').setAttribute('x1',nearest.x); cursor.querySelector('line').setAttribute('x2',nearest.x);
+        cursor.querySelector('circle').setAttribute('cx',nearest.x); cursor.querySelector('circle').setAttribute('cy',nearest.y);
+        tip.style.display='block';
+        tip.style.left = (nearest.x/vb.width*rect.width)+'px';
+        tip.style.top = (nearest.y/vb.height*rect.height)+'px';
+        tip.textContent = fmtDateShort(nearest.date)+'  '+euroShort(nearest.val);
+      }
+      function hide(){ cursor.style.display='none'; tip.style.display='none'; }
+      svg.addEventListener('pointerdown', e=>{ show(e.clientX); });
+      svg.addEventListener('pointermove', e=>{ if(e.buttons||e.pointerType==='mouse') show(e.clientX); });
+      svg.addEventListener('pointerleave', hide);
+      svg.addEventListener('pointerup', ()=> setTimeout(hide, 1400));
+    });
+  }
+
+  function barList(rows, opts){
+    opts = opts||{};
+    const max = Math.max(...rows.map(r=>r.value), 1);
+    return `<div class="barlist">${rows.map(r=>`
+      <div class="brow">
+        <div class="bhead"><span class="bname">${esc(r.label)}</span><span class="bval mono">${opts.fmt? opts.fmt(r.value): euro(r.value)}${r.pctLabel? ' · '+r.pctLabel:''}</span></div>
+        <div class="btrack"><div class="bfill" style="width:${(r.value/max*100).toFixed(1)}%; background:${r.color||'var(--accent)'}"></div></div>
+      </div>`).join('')}</div>`;
+  }
+
+  // ---------- render: dashboard ----------
+  function renderDashboard(){
+    const openItems = STATE.items.filter(i=>i.status==='OPEN'||i.status==='PREORDER');
+    const closedItems = STATE.items.filter(i=>i.status==='CLOSED');
+    const investedAssets = openItems.reduce((s,i)=>s+derived(i).currentValue,0);
+    const lastNW = STATE.networth[STATE.networth.length-1];
+    const prevNW = STATE.networth[STATE.networth.length-2];
+    const netWorth = lastNW ? lastNW.netWorth : investedAssets;
+    const delta = (lastNW && prevNW) ? lastNW.netWorth - prevNW.netWorth : null;
+    const liquidCash = lastNW ? lastNW.cashTotal : 0;
+    const closedProfit = closedItems.reduce((s,i)=>s+derived(i).profit,0);
+    const closedBuy = closedItems.reduce((s,i)=>s+i.buyPrice,0);
+    const closedROI = closedBuy ? closedProfit/closedBuy : 0;
+    const netWorthAtCost = openItems.reduce((s,i)=>s+i.buyPrice,0) + liquidCash;
+
+    const byType = {};
+    openItems.forEach(i=>{ const t=i.type||'Other'; byType[t]=(byType[t]||0)+derived(i).currentValue; });
+    if(liquidCash) byType['Cash'] = liquidCash;
+    const totalAllocation = investedAssets + liquidCash;
+    const typeRows = Object.keys(byType).sort((a,b)=>byType[b]-byType[a]).map(t=>({
+      label:t, value:byType[t], color: t==='Cash' ? 'var(--series-6)' : (TYPE_COLOR[t]||'var(--muted)'),
+      pctLabel: totalAllocation? Math.round(byType[t]/totalAllocation*100)+'%' : ''
+    }));
+
+    const nwPoints = STATE.networth.map(n=>({x:new Date(n.date+'T00:00:00'), y:n.netWorth}));
+
+    const recent = closedItems.slice().sort((a,b)=>(b.sellDate||'').localeCompare(a.sellDate||'')).slice(0,4);
+
+    document.getElementById('pageTitle').textContent = 'Dashboard';
+    document.getElementById('pageSub').textContent = lastNW? ('As of '+fmtDateShort(lastNW.date)) : '';
+
+    const html = `
+      <div class="hero">
+        <div class="label">Net worth · market</div>
+        <div class="value num">${euro(netWorth)}</div>
+        ${delta!==null ? `<div class="delta ${delta>=0?'good':'bad'}">${delta>=0?'▲':'▼'} ${euro(Math.abs(delta))} vs previous snapshot</div>` : ''}
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="l">At cost</div><div class="v num">${euro(netWorthAtCost)}</div><div class="s">unrealized ${euro(netWorth-netWorthAtCost)}</div></div>
+        <div class="kpi"><div class="l">Liquid cash</div><div class="v num">${euro(liquidCash)}</div><div class="s">${netWorth? Math.round(liquidCash/netWorth*100):0}% of net worth</div></div>
+        <div class="kpi"><div class="l">Invested + assets</div><div class="v num">${euro(investedAssets)}</div><div class="s">${openItems.length} open positions</div></div>
+        <div class="kpi"><div class="l">Closed ROI</div><div class="v num" style="color:${closedROI>=0?'var(--good)':'var(--critical)'}">${pct(closedROI)}</div><div class="s">${closedItems.length} closed · ${euro(closedProfit)} profit</div></div>
+      </div>
+
+      <div class="section-title">Net worth trend</div>
+      <div class="card chart-wrap">${lineChart(nwPoints,{h:130})}</div>
+
+      <div class="section-title">Allocation by category</div>
+      <div class="card">${typeRows.length? barList(typeRows) : '<div class="empty">No open positions</div>'}</div>
+
+      <div class="section-title">Recently closed</div>
+      <div class="card" style="padding:4px 16px;">
+        ${recent.length? recent.map(i=>{
+          const d = derived(i);
+          return `<div class="list-row" data-open-item="${i._id}">
+            <span class="swatch" style="background:${TYPE_COLOR[i.type]||'var(--muted)'}"></span>
+            <div class="main"><div class="name">${esc(i.name)}</div><div class="sub">Sold ${fmtDateShort(i.sellDate)}</div></div>
+            <div class="right"><div class="amt num">${euro(d.sellTotal)}</div><div class="chg num" style="color:${d.profit>=0?'var(--good)':'var(--critical)'}">${d.profit>=0?'+':''}${euro(d.profit)}</div></div>
+          </div>`;
+        }).join('') : '<div class="empty">Nothing sold yet</div>'}
+      </div>
+    `;
+    document.getElementById('view').innerHTML = html;
+    wireLineChartHover(document.getElementById('view'));
+    document.querySelectorAll('[data-open-item]').forEach(r=>r.addEventListener('click', ()=>openItemDetail(r.dataset.openItem)));
+  }
+
+  // ---------- render: portfolio ----------
+  function groupItemsByName(items){
+    const byName = {};
+    items.forEach(i=>{ (byName[i.name]=byName[i.name]||[]).push(i); });
+    return Object.keys(byName).sort((a,b)=>a.localeCompare(b)).map(name=>({name, items:byName[name]}));
+  }
+
+  function buildPortfolioGroups(items){
+    const byType = {};
+    items.forEach(i=>{ const t=i.type||'Other'; (byType[t]=byType[t]||[]).push(i); });
+    const typeKeys = [...TYPE_ORDER.filter(t=>byType[t]), ...Object.keys(byType).filter(t=>!TYPE_ORDER.includes(t)).sort()];
+    return typeKeys.map(t=>{
+      const itemsOfType = byType[t];
+      const definedSubs = SUBTYPES[t]||[];
+      const subsPresent = [...new Set(itemsOfType.map(i=>i.subType).filter(Boolean))];
+      const subOrder = [...definedSubs.filter(s=>subsPresent.includes(s)), ...subsPresent.filter(s=>!definedSubs.includes(s)).sort()];
+      const showSubHeader = subOrder.length>1;
+      const subGroups = (subOrder.length? subOrder : [null]).map(sub=>({
+        subType: sub,
+        nameGroups: groupItemsByName(sub===null? itemsOfType : itemsOfType.filter(i=>i.subType===sub))
+      })).filter(sg=>sg.nameGroups.length);
+      return { type:t, showSubHeader, subGroups };
+    }).filter(tg=>tg.subGroups.length);
+  }
+
+  function renderNameGroupRow(ng, typeKey){
+    if(ng.items.length===1){
+      const i = ng.items[0];
+      const d = derived(i);
+      return `<div class="list-row" data-open-item="${i._id}">
+        <span class="swatch" style="background:${itemSwatchColor(i)}"></span>
+        <div class="main"><div class="name">${esc(i.name)}</div><div class="sub">${esc(i.subType||i.type)} · ${euro(i.buyPrice)}</div></div>
+        <div class="right"><div class="amt num">${euro(d.currentValue)}</div><div class="chg num" style="color:${d.profit>=0?'var(--good)':'var(--critical)'}">${pct(d.roi)}</div></div>
+      </div>`;
+    }
+    const totalBuy = ng.items.reduce((s,i)=>s+(i.buyPrice||0),0);
+    const totalCurrent = ng.items.reduce((s,i)=>s+derived(i).currentValue,0);
+    const avgBuy = totalBuy/ng.items.length;
+    const avgCurrent = totalCurrent/ng.items.length;
+    const roi = totalBuy ? (totalCurrent-totalBuy)/totalBuy : null;
+    const profit = totalCurrent-totalBuy;
+    const key = typeKey+'::'+(ng.items[0].subType||'')+'::'+ng.name;
+    const expanded = expandedGroups.has(key);
+    let rows = `<div class="list-row" data-toggle-group="${esc(key)}">
+      <span class="swatch" style="background:${groupSwatchColor(ng.items, typeKey)}"></span>
+      <div class="main"><div class="name">${esc(ng.name)}</div><div class="sub">${ng.items.length} units · avg ${euro(avgBuy)}</div></div>
+      <div class="right"><div class="amt num">${euro(avgCurrent)}</div><div class="chg num" style="color:${profit>=0?'var(--good)':'var(--critical)'}">${pct(roi)}</div></div>
+      <svg class="chevron ${expanded?'open':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </div>`;
+    if(expanded){
+      ng.items.slice().sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||'')).forEach(i=>{
+        const d = derived(i);
+        const secondary = i.retailer || (i.orderNo? '#'+i.orderNo : 'Bought '+fmtDateShort(i.buyDate));
+        rows += `<div class="list-row sub-row" data-open-item="${i._id}">
+          <span class="swatch" style="background:${itemSwatchColor(i)}"></span>
+          <div class="main"><div class="name">${fmtDateShort(i.buyDate)}</div><div class="sub">${esc(secondary)} · ${euro(i.buyPrice)}</div></div>
+          <div class="right"><div class="amt num">${euro(d.currentValue)}</div><div class="chg num" style="color:${d.profit>=0?'var(--good)':'var(--critical)'}">${pct(d.roi)}</div></div>
+        </div>`;
+      });
+    }
+    return rows;
+  }
+
+  function renderGroupedPortfolio(list){
+    const groups = buildPortfolioGroups(list);
+    if(!groups.length) return '<div class="card" style="padding:4px 16px;"><div class="empty">No items match</div></div>';
+    return groups.map((tg,ti)=>`
+      <div class="section-title ${ti===0?'first':''}">${esc(tg.type)}</div>
+      <div class="card" style="padding:4px 16px;">
+        ${tg.subGroups.map(sg=>`
+          ${tg.showSubHeader && sg.subType ? `<div class="subtype-label">${esc(sg.subType)}</div>` : ''}
+          ${sg.nameGroups.map(ng=>renderNameGroupRow(ng, tg.type)).join('')}
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  function renderFlatPortfolio(list){
+    return `<div class="card" style="padding:4px 16px;">
+      ${list.length? list.map(i=>{
+        const d = derived(i);
+        const secondary = i.status==='CLOSED' ? 'Sold '+fmtDateShort(i.sellDate) : (i.status==='PREORDER'? 'Preorder · '+fmtDateShort(i.buyDate) : i.subType||i.type);
+        return `<div class="list-row" data-open-item="${i._id}">
+          <span class="swatch" style="background:${itemSwatchColor(i)}"></span>
+          <div class="main"><div class="name">${esc(i.name)}</div><div class="sub">${esc(secondary)}</div></div>
+          <div class="right"><div class="amt num">${euro(d.currentValue)}</div><div class="chg num" style="color:${d.profit>=0?'var(--good)':'var(--critical)'}">${pct(d.roi)}</div></div>
+        </div>`;
+      }).join('') : '<div class="empty">No items match</div>'}
+    </div>`;
+  }
+
+  function renderPortfolio(){
+    document.getElementById('pageTitle').textContent = 'Portfolio';
+    const openCount = STATE.items.filter(i=>i.status==='OPEN').length;
+    document.getElementById('pageSub').textContent = openCount+' open';
+
+    let list = STATE.items.filter(i=>{
+      if(portfolioFilter.status!=='All' && i.status!==portfolioFilter.status) return false;
+      if(portfolioFilter.type!=='All' && i.type!==portfolioFilter.type) return false;
+      if(portfolioFilter.q && !i.name.toLowerCase().includes(portfolioFilter.q.toLowerCase())) return false;
+      return true;
+    });
+    list.sort((a,b)=>{
+      if(a.status==='OPEN'&&b.status!=='OPEN') return -1;
+      if(b.status==='OPEN'&&a.status!=='OPEN') return 1;
+      return (b.buyDate||'').localeCompare(a.buyDate||'');
+    });
+
+    const types = ['All',...TYPE_ORDER.filter(t=>STATE.items.some(i=>i.type===t))];
+    const statuses = ['OPEN','CLOSED','PREORDER','All'];
+    const isGrouped = portfolioFilter.status==='OPEN';
+
+    const html = `
+      <input class="search" id="pfSearch" placeholder="Search items…" value="${esc(portfolioFilter.q)}">
+      <div class="chip-row" id="statusChips">${statuses.map(s=>`<button class="chip ${portfolioFilter.status===s?'active':''}" data-status="${s}">${s[0]+s.slice(1).toLowerCase()}</button>`).join('')}</div>
+      <div class="chip-row" id="typeChips">${types.map(t=>`<button class="chip ${portfolioFilter.type===t?'active':''}" data-type="${t}">${t}</button>`).join('')}</div>
+      ${isGrouped ? renderGroupedPortfolio(list) : renderFlatPortfolio(list)}
+    `;
+    document.getElementById('view').innerHTML = html;
+    document.querySelectorAll('[data-open-item]').forEach(r=>r.addEventListener('click', ()=>openItemDetail(r.dataset.openItem)));
+    document.querySelectorAll('[data-toggle-group]').forEach(r=>r.addEventListener('click', ()=>{
+      const key = r.dataset.toggleGroup;
+      if(expandedGroups.has(key)) expandedGroups.delete(key); else expandedGroups.add(key);
+      renderPortfolio();
+    }));
+    document.getElementById('pfSearch').addEventListener('input', e=>{ portfolioFilter.q=e.target.value; renderPortfolio(); document.getElementById('pfSearch').focus(); document.getElementById('pfSearch').selectionStart = document.getElementById('pfSearch').value.length; });
+    document.querySelectorAll('#statusChips .chip').forEach(c=>c.addEventListener('click',()=>{ portfolioFilter.status=c.dataset.status; renderPortfolio(); }));
+    document.querySelectorAll('#typeChips .chip').forEach(c=>c.addEventListener('click',()=>{ portfolioFilter.type=c.dataset.type; renderPortfolio(); }));
+  }
+
+  function openItemDetail(id){
+    const item = STATE.items.find(i=>i._id===id);
+    if(!item) return;
+    const d = derived(item);
+    const history = (item.priceHistory||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    const points = history.map(h=>({x:new Date(h.date+'T00:00:00'), y:h.marketValue}));
+    const statusClass = item.status.toLowerCase();
+    const physical = PHYSICAL_TYPES.includes(item.type);
+    const arrived = isArrived(item);
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <span class="badge ${statusClass}">${item.status}</span>
+      ${physical ? `<span class="badge ${arrived?'arrived-yes':'arrived-no'}" id="arrivedToggle" style="margin-left:6px;">${arrived?'Arrived':'Not arrived'}</span>` : ''}
+      <h2>${esc(item.name)}</h2>
+      <div class="detail-grid">
+        <div class="detail-cell"><div class="l">Type</div><div class="v">${esc(item.type)} · ${esc(item.subType||'')}</div></div>
+        <div class="detail-cell"><div class="l">Buy price</div><div class="v num">${euro(item.buyPrice)}</div></div>
+        <div class="detail-cell"><div class="l">Buy date</div><div class="v">${fmtDate(item.buyDate)}</div></div>
+        <div class="detail-cell"><div class="l">${item.status==='CLOSED'?'Sell total':'Current value'}</div><div class="v num">${euro(d.currentValue)}</div></div>
+        <div class="detail-cell"><div class="l">${item.status==='CLOSED'?'Profit':'Unrealized'}</div><div class="v num" style="color:${d.profit>=0?'var(--good)':'var(--critical)'}">${euro(d.profit)}</div></div>
+        <div class="detail-cell"><div class="l">ROI</div><div class="v num" style="color:${d.profit>=0?'var(--good)':'var(--critical)'}">${pct(d.roi)}</div></div>
+        <div class="detail-cell"><div class="l">Retailer</div><div class="v">${esc(item.retailer||'—')}</div></div>
+        <div class="detail-cell"><div class="l">Order #</div><div class="v">${esc(item.orderNo||'—')}</div></div>
+      </div>
+      ${points.length>1? `<div class="section-title" style="margin-top:18px;">Market value history</div><div class="card chart-wrap">${lineChart(points,{h:90})}</div>` : ''}
+      <div class="btn-row" style="margin-top:18px;">
+        ${item.status!=='CLOSED' ? `<button class="btn secondary" id="btnUpdateMV">Update value</button><button class="btn" id="btnMarkSold">Mark sold</button>` : `<button class="btn" id="btnEditItem">Edit details</button>`}
+      </div>
+      ${item.status!=='CLOSED' ? `<button class="btn secondary" id="btnEditItem" style="margin-top:10px;">Edit details</button>` : ''}
+      <button class="btn danger" id="btnDeleteItem" style="margin-top:14px;">${item.status==='CLOSED'?'Delete record':'Delete item'}</button>
+    `);
+    wireLineChartHover(document.getElementById('modalBody'));
+    const mvBtn = document.getElementById('btnUpdateMV'); if(mvBtn) mvBtn.addEventListener('click', ()=>formUpdateMarketValue(item));
+    const soldBtn = document.getElementById('btnMarkSold'); if(soldBtn) soldBtn.addEventListener('click', ()=>formMarkSold(item));
+    document.getElementById('btnEditItem').addEventListener('click', ()=>formEditItem(item));
+    const arrivedBtn = document.getElementById('arrivedToggle');
+    if(arrivedBtn) arrivedBtn.addEventListener('click', async ()=>{
+      if(STATE.db) await STATE.db.collection('portfolioItems').doc(item._id).update({arrived: !arrived, updatedAt:new Date().toISOString()});
+      closeModal(); await refreshAndRender();
+    });
+    document.getElementById('btnDeleteItem').addEventListener('click', async ()=>{
+      if(!confirm('Delete "'+item.name+'" permanently?')) return;
+      if(STATE.db) await STATE.db.collection('portfolioItems').doc(item._id).delete();
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  function formEditItem(item){
+    const typeOptions = TYPE_ORDER.map(t=>`<option value="${t}" ${t===item.type?'selected':''}>${t}</option>`).join('');
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Edit details</h2>
+      <div class="field-row">
+        <div class="field"><label>Type</label><select id="f-type">${typeOptions}</select></div>
+        <div class="field"><label>Sub-type</label><select id="f-subtype"></select></div>
+      </div>
+      <div class="field"><label>Name</label><input id="f-name" value="${esc(item.name)}"></div>
+      <div class="field-row">
+        <div class="field"><label>Buy price (€)</label><input type="number" step="0.01" id="f-buy" value="${item.buyPrice}"></div>
+        <div class="field"><label>Buy date</label><input type="date" id="f-buydate" value="${item.buyDate||''}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Retailer</label><input id="f-retailer" value="${esc(item.retailer||'')}"></div>
+        <div class="field"><label>Order #</label><input id="f-orderno" value="${esc(item.orderNo||'')}"></div>
+      </div>
+      <div class="field"><label>Status</label><select id="f-status">
+        <option value="OPEN" ${item.status==='OPEN'?'selected':''}>Open</option>
+        <option value="PREORDER" ${item.status==='PREORDER'?'selected':''}>Preorder</option>
+        <option value="CLOSED" ${item.status==='CLOSED'?'selected':''}>Closed</option>
+      </select></div>
+      <div class="field" id="arrivedFieldWrap">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;">
+          <input type="checkbox" id="f-arrived" ${isArrived(item)?'checked':''} style="width:18px;height:18px;">
+          <span style="font-size:14px; color:var(--ink); font-weight:400;">Arrived</span>
+        </label>
+      </div>
+      <div id="mvFieldWrap" style="${item.status==='CLOSED'?'display:none':''}">
+        <div class="field"><label>Current market value (€)</label><input type="number" step="0.01" id="f-mv" value="${item.currentMarketValue!=null?item.currentMarketValue:item.buyPrice}"></div>
+      </div>
+      <div id="sellFieldsWrap" style="${item.status==='CLOSED'?'':'display:none'}">
+        <div class="field-row">
+          <div class="field"><label>Sell price (€)</label><input type="number" step="0.01" id="f-sellprice" value="${item.sellPrice!=null?item.sellPrice:''}"></div>
+          <div class="field"><label>Other (+/−)</label><input type="number" step="0.01" id="f-other" value="${item.other!=null?item.other:0}"></div>
+        </div>
+        <div class="field"><label>Sell date</label><input type="date" id="f-selldate" value="${item.sellDate||''}"></div>
+      </div>
+      <button class="btn" id="saveEdit">Save changes</button>
+    `);
+    function refreshSub(){
+      const t = document.getElementById('f-type').value;
+      const subs = SUBTYPES[t]||[t];
+      document.getElementById('f-subtype').innerHTML = subs.map(s=>`<option value="${s}" ${s===item.subType?'selected':''}>${s}</option>`).join('');
+    }
+    document.getElementById('f-type').addEventListener('change', refreshSub);
+    refreshSub();
+    document.getElementById('f-status').addEventListener('change', e=>{
+      const closed = e.target.value==='CLOSED';
+      document.getElementById('sellFieldsWrap').style.display = closed ? '' : 'none';
+      document.getElementById('mvFieldWrap').style.display = closed ? 'none' : '';
+    });
+    document.getElementById('saveEdit').addEventListener('click', async ()=>{
+      const name = document.getElementById('f-name').value.trim();
+      const buyPrice = parseFloat(document.getElementById('f-buy').value);
+      if(!name || isNaN(buyPrice)){ alert('Name and buy price are required.'); return; }
+      const status = document.getElementById('f-status').value;
+      const rec = {
+        type: document.getElementById('f-type').value,
+        subType: document.getElementById('f-subtype').value,
+        name, buyPrice,
+        buyDate: document.getElementById('f-buydate').value || null,
+        retailer: document.getElementById('f-retailer').value || null,
+        orderNo: document.getElementById('f-orderno').value || null,
+        status,
+        arrived: document.getElementById('f-arrived').checked,
+        updatedAt: new Date().toISOString()
+      };
+      if(status==='CLOSED'){
+        const sp = parseFloat(document.getElementById('f-sellprice').value);
+        rec.sellPrice = isNaN(sp) ? null : sp;
+        const other = parseFloat(document.getElementById('f-other').value);
+        rec.other = isNaN(other) ? 0 : other;
+        rec.sellDate = document.getElementById('f-selldate').value || null;
+      } else {
+        const mv = parseFloat(document.getElementById('f-mv').value);
+        rec.currentMarketValue = isNaN(mv) ? null : mv;
+        rec.sellPrice = null; rec.sellDate = null; rec.other = 0;
+      }
+      if(STATE.db) await STATE.db.collection('portfolioItems').doc(item._id).update(rec);
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  function formUpdateMarketValue(item){
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Update market value</h2>
+      <div class="field"><label>New market price (€)</label><input type="number" step="0.01" id="f-mv" value="${item.currentMarketValue||item.buyPrice}"></div>
+      <div class="field"><label>Date</label><input type="date" id="f-mvdate" value="${todayISO()}"></div>
+      <button class="btn" id="saveMV">Save</button>
+    `);
+    document.getElementById('saveMV').addEventListener('click', async ()=>{
+      const mv = parseFloat(document.getElementById('f-mv').value);
+      const date = document.getElementById('f-mvdate').value;
+      if(isNaN(mv)) return;
+      const history = (item.priceHistory||[]).concat([{date, marketValue:mv, qtyOpen:1}]);
+      if(STATE.db) await STATE.db.collection('portfolioItems').doc(item._id).update({currentMarketValue:mv, priceHistory:history, updatedAt:new Date().toISOString()});
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  function formMarkSold(item){
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Mark as sold</h2>
+      <div class="field"><label>Sell price (€)</label><input type="number" step="0.01" id="f-sp" value="${item.currentMarketValue||item.buyPrice}"></div>
+      <div class="field"><label>Other (+/−, shipping/fees)</label><input type="number" step="0.01" id="f-other" value="0"></div>
+      <div class="field"><label>Sell date</label><input type="date" id="f-sd" value="${todayISO()}"></div>
+      <button class="btn" id="saveSold">Confirm sale</button>
+    `);
+    document.getElementById('saveSold').addEventListener('click', async ()=>{
+      const sellPrice = parseFloat(document.getElementById('f-sp').value);
+      const other = parseFloat(document.getElementById('f-other').value)||0;
+      const sellDate = document.getElementById('f-sd').value;
+      if(isNaN(sellPrice)) return;
+      if(STATE.db) await STATE.db.collection('portfolioItems').doc(item._id).update({status:'CLOSED', sellPrice, other, sellDate, updatedAt:new Date().toISOString()});
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  function formAddItem(){
+    const typeOptions = TYPE_ORDER.map(t=>`<option value="${t}">${t}</option>`).join('');
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Add item</h2>
+      <div class="field-row">
+        <div class="field"><label>Type</label><select id="f-type">${typeOptions}</select></div>
+        <div class="field"><label>Sub-type</label><select id="f-subtype"></select></div>
+      </div>
+      <div class="field"><label>Name</label><input id="f-name" placeholder="e.g. Surging Sparks - ETB"></div>
+      <div class="field-row">
+        <div class="field"><label>Buy price (€)</label><input type="number" step="0.01" id="f-buy"></div>
+        <div class="field"><label>Buy date</label><input type="date" id="f-buydate" value="${todayISO()}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Retailer</label><input id="f-retailer"></div>
+        <div class="field"><label>Order #</label><input id="f-orderno"></div>
+      </div>
+      <div class="field"><label>Status</label><select id="f-status"><option value="OPEN">Open</option><option value="PREORDER">Preorder</option></select></div>
+      <div class="field" id="arrivedFieldWrap">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;">
+          <input type="checkbox" id="f-arrived" checked style="width:18px;height:18px;">
+          <span style="font-size:14px; color:var(--ink); font-weight:400;">Arrived</span>
+        </label>
+      </div>
+      <button class="btn" id="saveItem">Add to portfolio</button>
+    `);
+    function refreshSub(){
+      const t = document.getElementById('f-type').value;
+      document.getElementById('f-subtype').innerHTML = (SUBTYPES[t]||[t]).map(s=>`<option value="${s}">${s}</option>`).join('');
+    }
+    document.getElementById('f-type').addEventListener('change', refreshSub);
+    refreshSub();
+    document.getElementById('saveItem').addEventListener('click', async ()=>{
+      const name = document.getElementById('f-name').value.trim();
+      const buyPrice = parseFloat(document.getElementById('f-buy').value);
+      if(!name || isNaN(buyPrice)){ alert('Name and buy price are required.'); return; }
+      const nextId = Math.max(0,...STATE.items.map(i=>i.itemId||0)) + 1;
+      const rec = {
+        itemId: nextId, status: document.getElementById('f-status').value,
+        type: document.getElementById('f-type').value, subType: document.getElementById('f-subtype').value,
+        name, buyPrice, buyDate: document.getElementById('f-buydate').value,
+        currentMarketValue: buyPrice, sellPrice:null, sellDate:null, other:0,
+        arrived: document.getElementById('f-arrived').checked,
+        retailer: document.getElementById('f-retailer').value||null, orderNo: document.getElementById('f-orderno').value||null,
+        priceHistory:[], createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
+      };
+      if(STATE.db) await STATE.db.collection('portfolioItems').doc(String(nextId)).set(rec);
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  // ---------- render: finances ----------
+  function renderFinances(){
+    document.getElementById('pageTitle').textContent = 'Finances';
+    document.getElementById('pageSub').textContent = financesSeg==='networth'?'Net worth':'Expenses';
+    const view = document.getElementById('view');
+    const seg = `<div class="segmented"><button class="${financesSeg==='networth'?'active':''}" data-seg="networth">Net Worth</button><button class="${financesSeg==='expenses'?'active':''}" data-seg="expenses">Expenses</button></div>`;
+
+    if(financesSeg==='networth'){
+      const rows = STATE.networth.slice().reverse();
+      const points = STATE.networth.map(n=>({x:new Date(n.date+'T00:00:00'), y:n.netWorth}));
+      view.innerHTML = seg + `
+        <div class="card chart-wrap">${lineChart(points,{h:130})}</div>
+        <div class="section-title">Monthly snapshots</div>
+        <div class="card" style="padding:4px 16px;">
+          ${rows.length? rows.map(n=>`
+            <div class="list-row">
+              <div class="main"><div class="name">${fmtDate(n.date)}</div><div class="sub">Cash ${euroShort(n.cashTotal)} · Stocks ${euroShort(n.stocks)} · Crypto ${euroShort(n.crypto)} · TCG ${euroShort(n.tcgTotal)}</div></div>
+              <div class="right"><div class="amt num">${euro(n.netWorth)}</div></div>
+            </div>`).join('') : '<div class="empty">No snapshots yet</div>'}
+        </div>
+      `;
+      wireLineChartHover(view);
+    } else {
+      const months = [...STATE.expenses.map(normalizeLegacyMonth), ...computeLoggedMonths()].sort((a,b)=>b.month.localeCompare(a.month));
+      const latest = months[0];
+      const catRows = latest ? Object.keys(latest.categories).map(k=>({label:EXPENSE_CAT_LABEL[k]||k, value:latest.categories[k]})).filter(r=>r.value>0).sort((a,b)=>b.value-a.value) : [];
+      view.innerHTML = seg + `
+        <div class="section-title first">Latest month${latest? ': '+fmtMonth(latest.month) : ''}</div>
+        <div class="card">${catRows.length? barList(catRows,{color:'var(--series-2)'}) : '<div class="empty">No expenses logged yet</div>'}</div>
+        <div class="section-title">History</div>
+        <div class="card" style="padding:4px 16px;">
+          ${months.length? months.map(m=>{
+            if(m.source==='legacy'){
+              return `<div class="list-row">
+                <div class="main"><div class="name">${fmtMonth(m.month)}</div><div class="sub">Income ${euroShort(m.incomeTotal)} · Spent ${euroShort(m.expensesTotal)}</div></div>
+                <div class="right"><div class="amt num" style="color:${m.netCashFlow>=0?'var(--good)':'var(--critical)'}">${m.netCashFlow>=0?'+':''}${euro(m.netCashFlow)}</div></div>
+              </div>`;
+            }
+            return `<div class="list-row">
+              <div class="main"><div class="name">${fmtMonth(m.month)}</div><div class="sub">${m.count} entr${m.count===1?'y':'ies'} logged</div></div>
+              <div class="right"><div class="amt num">${euro(m.expensesTotal)}</div></div>
+            </div>`;
+          }).join('') : '<div class="empty">No entries yet</div>'}
+        </div>
+      `;
+    }
+    document.querySelectorAll('.segmented [data-seg]').forEach(b=>b.addEventListener('click',()=>{ financesSeg=b.dataset.seg; renderFinances(); }));
+  }
+
+  function computeLoggedMonths(){
+    const byMonth = {};
+    STATE.expenseLog.forEach(e=>{
+      const mk = monthKey(e.date);
+      if(!mk) return;
+      if(!byMonth[mk]) byMonth[mk] = { month:mk, categories:{}, expensesTotal:0, count:0, source:'log' };
+      const m = byMonth[mk];
+      m.categories[e.category] = (m.categories[e.category]||0) + (e.amount||0);
+      m.expensesTotal += (e.amount||0);
+      m.count++;
+    });
+    return Object.values(byMonth);
+  }
+
+  function normalizeLegacyMonth(row){
+    const categories = {};
+    EXPENSE_CATS.forEach(([k])=>{ if(row[k]) categories[k]=row[k]; });
+    return { month: monthKey(row.date), categories, expensesTotal: row.expensesTotal, incomeTotal: row.incomeTotal, netCashFlow: row.netCashFlow, source:'legacy' };
+  }
+
+  function formNewSnapshot(){
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>New net worth snapshot</h2>
+      <div class="field"><label>Date</label><input type="date" id="f-date" value="${todayISO()}"></div>
+      <div class="field-row"><div class="field"><label>Debit Card</label><input type="number" step="0.01" id="f-debit" value="0"></div><div class="field"><label>Food Card</label><input type="number" step="0.01" id="f-food" value="0"></div></div>
+      <div class="field-row"><div class="field"><label>Savings Account</label><input type="number" step="0.01" id="f-sav" value="0"></div><div class="field"><label>Savings Couple</label><input type="number" step="0.01" id="f-savc" value="0"></div></div>
+      <div class="field-row"><div class="field"><label>In-hand</label><input type="number" step="0.01" id="f-hand" value="0"></div><div class="field"><label>Safe</label><input type="number" step="0.01" id="f-safe" value="0"></div></div>
+      <div class="field-row"><div class="field"><label>Stocks</label><input type="number" step="0.01" id="f-stocks"></div><div class="field"><label>Crypto</label><input type="number" step="0.01" id="f-crypto"></div></div>
+      <div class="field-row"><div class="field"><label>Sneaker Stock</label><input type="number" step="0.01" id="f-sneaker"></div><div class="field"><label>TCG Total</label><input type="number" step="0.01" id="f-tcg"></div></div>
+      <div class="field"><label>Casa Adiantamento</label><input type="number" step="0.01" id="f-casa" value="0"></div>
+      <button class="btn secondary" id="prefillBtn" type="button">Prefill Stocks/Crypto/Sneaker/TCG from Portfolio</button>
+      <button class="btn" id="saveSnapshot">Save snapshot</button>
+    `);
+    document.getElementById('prefillBtn').addEventListener('click', ()=>{
+      const sums = {Stocks:0,Crypto:0,Sneakers:0,TCG:0};
+      STATE.items.filter(i=>i.status==='OPEN').forEach(i=>{ if(sums[i.type]!==undefined) sums[i.type]+=derived(i).currentValue; });
+      document.getElementById('f-stocks').value = sums.Stocks.toFixed(2);
+      document.getElementById('f-crypto').value = sums.Crypto.toFixed(2);
+      document.getElementById('f-sneaker').value = sums.Sneakers.toFixed(2);
+      document.getElementById('f-tcg').value = sums.TCG.toFixed(2);
+    });
+    document.getElementById('saveSnapshot').addEventListener('click', async ()=>{
+      const g = id => parseFloat(document.getElementById(id).value)||0;
+      const debitCard=g('f-debit'), foodCard=g('f-food'), savingsAccount=g('f-sav'), savingsCouple=g('f-savc'), inHand=g('f-hand'), safe=g('f-safe');
+      const stocks=g('f-stocks'), crypto=g('f-crypto'), sneakerStock=g('f-sneaker'), tcgTotal=g('f-tcg'), casaAdiantamento=g('f-casa');
+      const cashTotal = debitCard+foodCard+savingsAccount+savingsCouple+inHand+safe;
+      const realAssetsTotal = sneakerStock+casaAdiantamento;
+      const netWorth = cashTotal+stocks+crypto+realAssetsTotal+tcgTotal;
+      const rec = {date:document.getElementById('f-date').value, debitCard,foodCard,savingsAccount,savingsCouple,inHand,safe,cashTotal,stocks,crypto,sneakerStock,casaAdiantamento,realAssetsTotal,tcgTotal,netWorth,createdAt:new Date().toISOString()};
+      if(STATE.db) await STATE.db.collection('networthSnapshots').add(rec);
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  // ---------- render: expense log ----------
+  function renderExpenseLog(){
+    document.getElementById('pageTitle').textContent = 'Log';
+    const curMonth = todayISO().slice(0,7);
+    document.getElementById('pageSub').textContent = fmtMonth(curMonth);
+
+    const thisMonth = STATE.expenseLog.filter(e=>monthKey(e.date)===curMonth);
+    const monthTotal = thisMonth.reduce((s,e)=>s+(e.amount||0),0);
+    const byCat = {};
+    thisMonth.forEach(e=>{ byCat[e.category]=(byCat[e.category]||0)+(e.amount||0); });
+    const catRows = Object.keys(byCat).map(k=>({label:EXPENSE_CAT_LABEL[k]||k, value:byCat[k]})).sort((a,b)=>b.value-a.value);
+
+    const sorted = STATE.expenseLog.slice().sort((a,b)=> b.date.localeCompare(a.date) || (b.createdAt||'').localeCompare(a.createdAt||''));
+
+    document.getElementById('view').innerHTML = `
+      <div class="hero">
+        <div class="label">Spent this month</div>
+        <div class="value num">${euro(monthTotal)}</div>
+        <div class="delta" style="color:var(--ink-2)">${thisMonth.length} entr${thisMonth.length===1?'y':'ies'} logged</div>
+      </div>
+
+      <div class="section-title">By category</div>
+      <div class="card">${catRows.length? barList(catRows,{color:'var(--series-2)'}) : '<div class="empty">No expenses logged this month</div>'}</div>
+
+      <div class="section-title">All entries</div>
+      <div class="card" style="padding:4px 16px;">
+        ${sorted.length? sorted.map(e=>`
+          <div class="list-row" data-open-expense="${e._id}">
+            <span class="swatch" style="background:var(--series-2)"></span>
+            <div class="main"><div class="name">${esc(EXPENSE_CAT_LABEL[e.category]||e.category)}</div><div class="sub">${fmtDateShort(e.date)}${e.note?' · '+esc(e.note):''}</div></div>
+            <div class="right"><div class="amt num">${euro(e.amount)}</div></div>
+          </div>`).join('') : '<div class="empty">No expenses logged yet</div>'}
+      </div>
+    `;
+    document.querySelectorAll('[data-open-expense]').forEach(r=>r.addEventListener('click', ()=>openExpenseDetail(r.dataset.openExpense)));
+  }
+
+  function formAddExpense(){
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Log expense</h2>
+      <div class="field"><label>Date</label><input type="date" id="f-date" value="${todayISO()}"></div>
+      <div class="field"><label>Category</label><select id="f-cat">${EXPENSE_CATS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div>
+      <div class="field"><label>Amount (€)</label><input type="number" step="0.01" id="f-amount" placeholder="0.00" autofocus></div>
+      <div class="field"><label>Note (optional)</label><input id="f-note" placeholder="e.g. Groceries at Continente"></div>
+      <button class="btn" id="saveExpenseLog">Save expense</button>
+    `);
+    document.getElementById('saveExpenseLog').addEventListener('click', async ()=>{
+      const amount = parseFloat(document.getElementById('f-amount').value)||0;
+      if(amount<=0) return;
+      const rec = {date:document.getElementById('f-date').value, category:document.getElementById('f-cat').value, amount, note:document.getElementById('f-note').value.trim(), createdAt:new Date().toISOString()};
+      if(STATE.db) await STATE.db.collection('expenseLog').add(rec);
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  function openExpenseDetail(id){
+    const e = STATE.expenseLog.find(x=>x._id===id);
+    if(!e) return;
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>${esc(EXPENSE_CAT_LABEL[e.category]||e.category)}</h2>
+      <div class="detail-grid">
+        <div class="detail-cell"><div class="l">Date</div><div class="v">${fmtDate(e.date)}</div></div>
+        <div class="detail-cell"><div class="l">Amount</div><div class="v num">${euro(e.amount)}</div></div>
+      </div>
+      ${e.note? `<div class="field"><label>Note</label><div style="font-size:14px;">${esc(e.note)}</div></div>` : ''}
+      <div class="btn-row" style="margin-top:6px;">
+        <button class="btn secondary" id="btnEditExpense">Edit</button>
+        <button class="btn danger" id="btnDeleteExpense">Delete</button>
+      </div>
+    `);
+    document.getElementById('btnEditExpense').addEventListener('click', ()=>formEditExpense(e));
+    document.getElementById('btnDeleteExpense').addEventListener('click', async ()=>{
+      if(STATE.db) await STATE.db.collection('expenseLog').doc(e._id).delete();
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  function formEditExpense(e){
+    showModal(`
+      <button class="modal-close" data-close>✕</button>
+      <h2>Edit expense</h2>
+      <div class="field"><label>Date</label><input type="date" id="f-date" value="${e.date}"></div>
+      <div class="field"><label>Category</label><select id="f-cat">${EXPENSE_CATS.map(([k,l])=>`<option value="${k}" ${k===e.category?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label>Amount (€)</label><input type="number" step="0.01" id="f-amount" value="${e.amount}"></div>
+      <div class="field"><label>Note (optional)</label><input id="f-note" value="${esc(e.note||'')}"></div>
+      <button class="btn" id="saveEditExpense">Save</button>
+    `);
+    document.getElementById('saveEditExpense').addEventListener('click', async ()=>{
+      const amount = parseFloat(document.getElementById('f-amount').value)||0;
+      const rec = {date:document.getElementById('f-date').value, category:document.getElementById('f-cat').value, amount, note:document.getElementById('f-note').value.trim()};
+      if(STATE.db) await STATE.db.collection('expenseLog').doc(e._id).update(rec);
+      closeModal(); await refreshAndRender();
+    });
+  }
+
+  // ---------- modal ----------
+  function showModal(html){
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalRoot').classList.add('open');
+    document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', closeModal));
+  }
+  function closeModal(){ document.getElementById('modalRoot').classList.remove('open'); }
+  document.getElementById('modalRoot').addEventListener('click', e=>{ if(e.target.id==='modalRoot') closeModal(); });
+
+  // ---------- fab per tab ----------
+  function updateFab(){
+    const old = document.querySelector('.fab'); if(old) old.remove();
+    let action = null, icon = '<path d="M12 5v14M5 12h14"/>';
+    if(currentTab==='portfolio') action = formAddItem;
+    else if(currentTab==='finances') action = ()=> financesSeg==='networth' ? formNewSnapshot() : formAddExpense();
+    else if(currentTab==='notes') action = formAddExpense;
+    if(!action) return;
+    const btn = el(`<button class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${icon}</svg></button>`);
+    btn.addEventListener('click', action);
+    document.querySelector('.shell').appendChild(btn);
+  }
+
+  // ---------- tab routing ----------
+  function render(){
+    if(currentTab==='dashboard') renderDashboard();
+    else if(currentTab==='portfolio') renderPortfolio();
+    else if(currentTab==='finances') renderFinances();
+    else if(currentTab==='notes') renderExpenseLog();
+    updateFab();
+  }
+
+  document.querySelectorAll('.tabbtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      document.getElementById('view').scrollTop = 0;
+      window.scrollTo(0,0);
+      render();
+    });
+  });
+
+  // ---------- auth ----------
+  function showAuthError(msg){
+    const box = document.getElementById('authError');
+    if(!box) return;
+    box.textContent = msg;
+    box.style.display = msg ? 'block' : 'none';
+  }
+
+  function wireAuthScreen(){
+    const googleBtn = document.getElementById('googleSignInBtn');
+    const emailToggle = document.getElementById('useEmailToggle');
+    const emailBlock = document.getElementById('emailAuthBlock');
+    const signInBtn = document.getElementById('emailSignInBtn');
+    const signUpBtn = document.getElementById('emailSignUpBtn');
+
+    googleBtn.addEventListener('click', async ()=>{
+      showAuthError('');
+      try{
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().signInWithPopup(provider);
+      }catch(e){ showAuthError(e.message||'Google sign-in failed.'); }
+    });
+
+    emailToggle.addEventListener('click', ()=>{
+      emailBlock.style.display = emailBlock.style.display==='none' ? 'block' : 'none';
+    });
+
+    signInBtn.addEventListener('click', async ()=>{
+      showAuthError('');
+      const email = document.getElementById('authEmail').value.trim();
+      const pw = document.getElementById('authPassword').value;
+      if(!email || !pw){ showAuthError('Enter email and password.'); return; }
+      try{ await firebase.auth().signInWithEmailAndPassword(email, pw); }
+      catch(e){ showAuthError(e.message||'Sign-in failed.'); }
+    });
+
+    signUpBtn.addEventListener('click', async ()=>{
+      showAuthError('');
+      const email = document.getElementById('authEmail').value.trim();
+      const pw = document.getElementById('authPassword').value;
+      if(!email || !pw){ showAuthError('Enter email and password.'); return; }
+      if(pw.length<6){ showAuthError('Password must be at least 6 characters.'); return; }
+      try{ await firebase.auth().createUserWithEmailAndPassword(email, pw); }
+      catch(e){ showAuthError(e.message||'Account creation failed.'); }
+    });
+  }
+
+  function wireSignOut(){
+    const btn = document.getElementById('signOutBtn');
+    if(btn) btn.addEventListener('click', ()=> firebase.auth().signOut());
+  }
+
+  // ---------- init ----------
+  async function init(){
+    wireAuthScreen();
+    wireSignOut();
+    firebase.auth().onAuthStateChanged(async (user)=>{
+      const authScreen = document.getElementById('authScreen');
+      const appShell = document.getElementById('appShell');
+      if(user){
+        authScreen.style.display = 'none';
+        appShell.style.display = '';
+        STATE.db = firebase.firestore();
+        document.getElementById('view').innerHTML = '<div class="loading">Loading your ledger…</div>';
+        await loadAll();
+        render();
+      } else {
+        appShell.style.display = 'none';
+        authScreen.style.display = 'flex';
+        STATE.db = null;
+        STATE.ready = false;
+      }
+    });
+  }
+  init();
+})();
+</script>
+
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    });
+  }
+</script>
+
+</body>
+</html>
